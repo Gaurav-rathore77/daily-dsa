@@ -32,7 +32,19 @@ function moveZeroes(nums){
 
 }
 
+function findDuplicate(nums){
+    for(let i = 0 ; i <nums.length ; i ++){
+        let index = Math.abs(nums[i]) - 1
+        if(nums[index] < 0){
+            return Math.abs(nums[i])
+        }
+        nums[index] = -nums[index]
+    }
+}
+    
+
 
 // console.log(twoSum([2,7,11,15],9))
 // console.log(maxSum([1,2,3,-1,5]))
 console.log(moveZeroes([0,1,0,3,12]))
+console.log(findDuplicate([1,3,4,2,2]))
