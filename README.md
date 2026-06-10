@@ -1,181 +1,354 @@
 # Prisma CRUD Authentication API
 
-A Node.js Express API with Prisma ORM for user authentication, including signup, login, and password reset functionality via email.
+A robust Node.js Express API with Prisma ORM for user authentication, featuring secure user registration, JWT-based login, and email-based password reset functionality.
 
-## Features
+## ✨ Features
 
 - **User Registration** - Secure user signup with bcrypt password hashing
-- **User Login** - JWT-based authentication with token generation
-- **Password Reset** - Email-based password reset with time-limited tokens
-- **MySQL Database** - Data persistence using Prisma ORM
+- **User Login** - JWT-based authentication with 24-hour token expiration
+- **Password Reset** - Email-based password reset with time-limited tokens (15 minutes)
+- **MySQL Database** - Reliable data persistence using Prisma ORM
+- **Secure Password Handling** - Industry-standard bcrypt hashing (10 salt rounds)
+- **Email Integration** - Gmail SMTP integration for password reset emails
 
-## Tech Stack
+## 🛠 Tech Stack
 
-- **Node.js** - Runtime environment
-- **Express.js** - Web framework
-- **Prisma** - Database ORM
-- **MySQL** - Database
-- **bcrypt** - Password hashing
-- **jsonwebtoken (JWT)** - Authentication tokens
-- **nodemailer** - Email sending for password reset
+| Technology | Purpose |
+|------------|---------|
+| **Node.js** | JavaScript runtime environment |
+| **Express.js** | Web application framework |
+| **Prisma** | Next-generation Database ORM |
+| **MySQL** | Relational database management system |
+| **bcrypt** | Password hashing library |
+| **jsonwebtoken (JWT)** | Authentication token generation and verification |
+| **nodemailer** | Email sending for password reset |
+| **dotenv** | Environment variable management |
 
-## Prerequisites
+## 📋 Prerequisites
 
-- Node.js (v14 or higher)
-- MySQL Server
-- npm or yarn
+Before you begin, ensure you have the following installed:
 
-## Installation
+- **Node.js** (v14 or higher) - [Download](https://nodejs.org/)
+- **MySQL Server** (v5.7 or higher) - [Download](https://dev.mysql.com/downloads/)
+- **npm** or **yarn** package manager
 
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd prisma-crud
-   ```
+## 🚀 Installation
 
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
+### 1. Clone the Repository
 
-3. **Set up environment variables**
-   
-   Create a `.env` file in the root directory and configure the following variables:
-   ```env
-   DATABASE_URL="mysql://username:password@localhost:3306/database_name"
-   EMAIL_USER=your-email@gmail.com
-   EMAIL_PASS=your-app-password
-   ```
+```bash
+git clone <repository-url>
+cd prisma-crud
+```
 
-   > **Note:** For Gmail, you need to use an [App Password](https://support.google.com/accounts/answer/185833) instead of your regular password.
+### 2. Install Dependencies
 
-4. **Set up the database**
-   ```bash
-   # Generate Prisma Client
-   npx prisma generate
+```bash
+npm install
+```
 
-   # Run migrations to create database tables
-   npx prisma migrate dev --name init
-   ```
+### 3. Configure Environment Variables
 
-## Running the Server
+Create a `.env` file in the root directory and add the following configuration:
+
+```env
+# Database Configuration
+DATABASE_URL="mysql://username:password@localhost:3306/database_name"
+
+# Email Configuration (Gmail)
+EMAIL_USER=your-email@gmail.com
+EMAIL_PASS=your-app-password
+```
+
+> **⚠️ Important:** For Gmail, you must use an [App Password](https://support.google.com/accounts/answer/185833) instead of your regular password. Regular passwords will not work for SMTP authentication.
+
+### 4. Set Up the Database
+
+```bash
+# Generate Prisma Client
+npx prisma generate
+
+# Run migrations to create database tables
+npx prisma migrate dev --name init
+
+# (Optional) Open Prisma Studio to view your database
+npx prisma studio
+```
+
+## 🖥 Running the Server
+
+### Development Mode
 
 ```bash
 node index.js
 ```
 
+### Using Nodemon (Auto-reload during development)
+
+```bash
+npm install -g nodemon
+nodemon index.js
+```
+
 The server will start on **http://localhost:5000**
 
-## API Endpoints
+## 📡 API Endpoints
+
+### Base URL
+```
+http://localhost:5000
+```
+
+---
 
 ### 1. User Signup
+
+Register a new user account.
+
 - **Endpoint:** `POST /signup`
-- **Body:**
-  ```json
-  {
+- **Content-Type:** `application/json`
+
+**Request Body:**
+```json
+{
+  "email": "user@example.com",
+  "password": "yourpassword"
+}
+```
+
+**Success Response (200 OK):**
+```json
+{
+  "message": "User created",
+  "user": {
+    "id": "clh1a2b3c000008l5abcd1234",
     "email": "user@example.com",
-    "password": "yourpassword"
+    "password": "$2b$10$hashedpassword...",
+    "createdAt": "2024-01-15T10:30:00.000Z"
   }
-  ```
-- **Response:**
-  ```json
-  {
-    "message": "User created",
-    "user": { ... }
-  }
-  ```
+}
+```
+
+**Error Response (500 Internal Server Error):**
+```json
+{
+  "error": "Error message here"
+}
+```
+
+---
 
 ### 2. User Login
+
+Authenticate user and receive JWT token.
+
 - **Endpoint:** `POST /login`
-- **Body:**
-  ```json
-  {
-    "email": "user@example.com",
-    "password": "yourpassword"
-  }
-  ```
-- **Response:**
-  ```json
-  {
-    "message": "Login successful",
-    "token": "jwt-token-here"
-  }
-  ```
+- **Content-Type:** `application/json`
+
+**Request Body:**
+```json
+{
+  "email": "user@example.com",
+  "password": "yourpassword"
+}
+```
+
+**Success Response (200 OK):**
+```json
+{
+  "message": "Login successful",
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+**Error Response (400 Bad Request):**
+```json
+{
+  "message": "Invalid credentials"
+}
+```
+
+---
 
 ### 3. Forgot Password
+
+Send password reset link to user's email.
+
 - **Endpoint:** `POST /forgot-password`
-- **Body:**
-  ```json
-  {
-    "email": "user@example.com"
-  }
-  ```
-- **Response:**
-  ```json
-  {
-    "message": "Reset link sent"
-  }
-  ```
+- **Content-Type:** `application/json`
+
+**Request Body:**
+```json
+{
+  "email": "user@example.com"
+}
+```
+
+**Success Response (200 OK):**
+```json
+{
+  "message": "Reset link sent"
+}
+```
+
+**Note:** For security, the response is the same whether the email exists or not.
+
+---
 
 ### 4. Reset Password
-- **Endpoint:** `POST /reset-password`
-- **Body:**
-  ```json
-  {
-    "token": "reset-token-from-email",
-    "newPassword": "newpassword123"
-  }
-  ```
-- **Response:**
-  ```json
-  {
-    "message": "Password updated"
-  }
-  ```
 
-## Database Schema
+Reset password using the token received via email.
+
+- **Endpoint:** `POST /reset-password`
+- **Content-Type:** `application/json`
+
+**Request Body:**
+```json
+{
+  "token": "reset-token-from-email",
+  "newPassword": "newpassword123"
+}
+```
+
+**Success Response (200 OK):**
+```json
+{
+  "message": "Password updated"
+}
+```
+
+**Error Responses:**
+- `400 Bad Request` - Invalid token or token expired
+- `500 Internal Server Error` - Server error
+
+---
+
+## 🗄 Database Schema
 
 ### User Model
-| Field     | Type     | Description              |
-|-----------|----------|--------------------------|
-| id        | String   | Unique ID (cuid)         |
-| email     | String   | Unique email address     |
-| password  | String   | Hashed password          |
-| createdAt | DateTime | Account creation date    |
+
+Stores user account information.
+
+| Field     | Type     | Attributes              | Description              |
+|-----------|----------|-------------------------|--------------------------|
+| id        | String   | @id @default(cuid())    | Unique identifier        |
+| email     | String   | @unique                 | User's email address     |
+| password  | String   | -                       | Bcrypt hashed password   |
+| createdAt | DateTime | @default(now())         | Account creation date    |
 
 ### PasswordResetToken Model
-| Field     | Type     | Description              |
-|-----------|----------|--------------------------|
-| id        | String   | Unique ID (cuid)         |
-| email     | String   | User email               |
-| token     | String   | Unique reset token       |
-| expiresAt | DateTime | Token expiration time    |
 
-## Project Structure
+Stores temporary password reset tokens.
+
+| Field     | Type     | Attributes              | Description              |
+|-----------|----------|-------------------------|--------------------------|
+| id        | String   | @id @default(cuid())    | Unique identifier        |
+| email     | String   | -                       | User's email address     |
+| token     | String   | @unique                 | Reset token (hex)        |
+| expiresAt | DateTime | -                       | Token expiration time    |
+
+## 📁 Project Structure
 
 ```
 prisma-crud/
 ├── config/
-│   └── email.js          # Email transporter configuration
+│   └── email.js              # Email transporter configuration
 ├── prisma/
-│   ├── schema.prisma     # Database schema definition
-│   └── migrations/       # Database migrations
+│   ├── schema.prisma         # Database schema definition
+│   ├── prisma-crud.code-workspace  # VS Code workspace file
+│   └── migrations/           # Database migration files
 ├── routes/
-│   └── userRout.js       # User routes (if used)
-├── .env                  # Environment variables
-├── .gitignore            # Git ignore file
-├── index.js              # Main server file
-├── package.json          # Project dependencies
-└── README.md             # This file
+│   └── userRout.js           # User route handlers
+├── .env                      # Environment variables (DO NOT COMMIT)
+├── .gitignore                # Git ignore rules
+├── index.js                  # Main application entry point
+├── package.json              # Project metadata and dependencies
+├── package-lock.json         # Dependency lock file
+└── README.md                 # Project documentation
 ```
 
-## Security Notes
+## 🔒 Security Features
 
-- Passwords are hashed using bcrypt before storage
-- JWT tokens expire after 1 day
-- Password reset tokens expire after 15 minutes
-- Never commit `.env` file to version control
+- **Password Hashing** - All passwords are hashed using bcrypt with 10 salt rounds
+- **JWT Tokens** - Authentication tokens expire after 24 hours
+- **Reset Token Expiration** - Password reset tokens expire after 15 minutes
+- **Secure Email** - Uses Gmail App Password for SMTP authentication
+- **Environment Variables** - Sensitive data stored in `.env` file (not committed to git)
 
-## License
+## 🧪 Testing the API
 
-ISC
+You can test the API using tools like:
+
+- **Postman** - [Download](https://www.postman.com/downloads/)
+- **Insomnia** - [Download](https://insomnia.rest/download)
+- **cURL** - Command-line tool (pre-installed on most systems)
+
+### Example cURL Requests
+
+**Signup:**
+```bash
+curl -X POST http://localhost:5000/signup \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@example.com","password":"test123"}'
+```
+
+**Login:**
+```bash
+curl -X POST http://localhost:5000/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@example.com","password":"test123"}'
+```
+
+**Forgot Password:**
+```bash
+curl -X POST http://localhost:5000/forgot-password \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@example.com"}'
+```
+
+**Reset Password:**
+```bash
+curl -X POST http://localhost:5000/reset-password \
+  -H "Content-Type: application/json" \
+  -d '{"token":"your-reset-token","newPassword":"newpassword123"}'
+```
+
+## 🐛 Troubleshooting
+
+### Common Issues
+
+1. **Database Connection Error**
+   - Verify MySQL server is running
+   - Check DATABASE_URL in `.env` file
+   - Ensure database exists
+
+2. **Email Not Sending**
+   - Use Gmail App Password, not regular password
+   - Enable "Less secure app access" or use App Password
+   - Check EMAIL_USER and EMAIL_PASS in `.env`
+
+3. **Port 5000 Already in Use**
+   - Change port in `index.js` or kill the process using port 5000
+
+4. **Prisma Client Not Generated**
+   - Run `npx prisma generate`
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## 📄 License
+
+This project is licensed under the ISC License.
+
+## 👨‍💻 Author
+
+Built with Node.js, Express, and Prisma ORM.
+
+---
+
+**Happy Coding! 🚀**
